@@ -35,6 +35,21 @@ namespace ZaiR37.Quest.Editor
             EditorGUI.indentLevel -= indentLevel;
         }
 
+        public static void HorizontalCenterButton(int buttonWidth, int buttonHeight, string buttonName, string toolTip, Action function)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(Screen.width / 2 - buttonWidth / 2);
+            if (GUILayout.Button(new GUIContent(buttonName, toolTip), GUILayout.Width(buttonWidth), GUILayout.Height(buttonHeight)))
+            {
+                function();
+            }
+            GUILayout.EndHorizontal();
+        }
+
+        public static void HorizontalCenterButton(int buttonWidth, int buttonHeight, string buttonName, Action function)
+        {
+            HorizontalCenterButton(buttonWidth, buttonHeight, buttonName, "", function);
+        }
 
         private static Texture2D MakeTex(int width, int height, Color color)
         {
