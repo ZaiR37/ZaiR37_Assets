@@ -1,5 +1,6 @@
-namespace ZaiR37.WindowEditor.Quest
+namespace ZaiR37.Quest.Editor
 {
+    using System;
     using UnityEditor;
     using UnityEngine;
 
@@ -15,17 +16,40 @@ namespace ZaiR37.WindowEditor.Quest
 
         private WindowType currentWindowType = WindowType.Creator;
 
+        string questTitle;
+
         [MenuItem("Window/ZaiR37 Editor/Quest")]
         public static void ShowWindow()
         {
-            EditorWindow.GetWindow<QuestWindow>("Quest");
+            GetWindow<QuestWindow>("Quest");
         }
 
         private void OnGUI()
         {
-            string titleWindow = "";
+            EditorKit.HorizontalLayout(EditorHeader);
+            EditorKit.HorizontalLine(new Color(0.3f, 0.3f, 0.3f));
             GUILayout.Space(5);
-            EditorGUILayout.BeginHorizontal();
+
+            mainScrollPos = GUILayout.BeginScrollView(mainScrollPos);
+
+            switch (currentWindowType)
+            {
+                case WindowType.Creator:
+                    GUILayout.Label("Quest Creator");
+                    break;
+
+                case WindowType.Editor:
+                    GUILayout.Label("Quest Editor");
+                    break;
+            }
+
+            GUILayout.EndScrollView();
+        }
+
+        private void EditorHeader()
+        {
+            string titleWindow = "";
+
             if (GUILayout.Button("<", GUILayout.Width(80)))
             {
                 if (currentWindowType == WindowType.Creator) currentWindowType = WindowType.Editor;
@@ -45,32 +69,12 @@ namespace ZaiR37.WindowEditor.Quest
 
             GUILayout.Label(titleWindow, new GUIStyle(EditorStyles.boldLabel) { fontSize = 17, alignment = TextAnchor.MiddleCenter });
 
-
             if (GUILayout.Button(">", GUILayout.Width(80)))
             {
                 if (currentWindowType == WindowType.Editor) currentWindowType = WindowType.Creator;
                 else currentWindowType++;
             }
-            GUILayout.Space(5);
-            EditorGUILayout.EndHorizontal();
-            GUILayout.Box("", GUILayout.Height(2), GUILayout.ExpandWidth(true));
-            GUILayout.Space(5);
-
-            mainScrollPos = GUILayout.BeginScrollView(mainScrollPos);
-
-            switch (currentWindowType)
-            {
-                case WindowType.Creator:
-                    GUILayout.Label("Quest Creator");
-                    break;
-
-                case WindowType.Editor:
-                    GUILayout.Label("Quest Editor");
-                    break;
-            }
-
-            GUILayout.EndScrollView();
         }
-
+        
     }
 }
