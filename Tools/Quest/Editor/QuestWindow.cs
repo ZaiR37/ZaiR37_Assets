@@ -231,11 +231,108 @@ namespace ZaiR37.Quest.Editor
 
         private void EditorBody()
         {
-            targetObject = (QuestData)EditorGUILayout.ObjectField("Quest", targetObject, typeof(QuestData), false);
+            targetObject = (QuestData)EditorGUILayout.ObjectField("Quest Source", targetObject, typeof(QuestData), false);
+            GUILayout.Space(5);
+
+            if (targetObject == null) return;
+
+            EditorKit.HorizontalLine(lineColor);
+
+            GUILayout.Space(5);
+
+            EditorKit.HorizontalLayout(() =>
+            {
+                EditorGUILayout.LabelField(new GUIContent("Title", "The Quest's Name (CAN'T EDIT)"), GUILayout.Width(148));
+                GUILayout.TextField(targetObject.Title);
+            });
+
+            EditorKit.HorizontalLayout(() =>
+            {
+                EditorGUILayout.LabelField(new GUIContent("Type", "Quest Type - Main, Side, or Commission"), GUILayout.Width(148));
+                targetObject.SetType((QuestType)EditorGUILayout.EnumPopup(targetObject.Type));
+            });
+
+            EditorKit.HorizontalLayout(() =>
+            {
+                EditorGUILayout.LabelField(new GUIContent("From", "Quest Provider's Name"), GUILayout.Width(148));
+
+                if (GUILayout.Button(targetObject.From, EditorStyles.popup))
+                {
+                    searchProvider.Init(npcList, (x) => { targetObject.SetFrom((string)x); });
+                    SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
+                }
+            });
+
+            EditorKit.HorizontalLayout(() =>
+            {
+                EditorGUILayout.LabelField(new GUIContent("Location", "Location of the Quest Objective"), GUILayout.Width(148));
+
+                if (GUILayout.Button(targetObject.Location, EditorStyles.popup))
+                {
+                    searchProvider.Init(locationList, (x) => { targetObject.SetLocation((string)x); });
+                    SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
+                }
+            });
+
+            EditorKit.HorizontalLayout(() =>
+            {
+                EditorGUILayout.LabelField(new GUIContent("Description", "Quest Description"), GUILayout.Width(149));
+                targetObject.SetDescription(GUILayout.TextArea(targetObject.Description));
+            });
+
+            targetObject.SetOrderly(EditorGUILayout.Toggle(new GUIContent("Orderly", "Completing objectives in a specific sequence"), targetObject.Orderly));
+
+            EditorKit.HorizontalLayout(() =>
+            {
+                showCreatorObjectives = EditorGUILayout.Foldout(showCreatorObjectives,
+                    new GUIContent("Objectives", "Objective List to Complete the Quest"),
+                    true, new GUIStyle(EditorStyles.foldout) { fixedWidth = 100 });
+
+                GUILayout.Space(100);
+
+                if (GUILayout.Button("Add New Objective (+)"))
+                {
+                }
+            });
+
+            EditorKit.Indent(1, () =>
+            {
+                if (showCreatorObjectives) CreatorObjectivePanel();
+            });
+
+            GUILayout.Space(3);
+
+            EditorKit.HorizontalLayout(() =>
+            {
+                showCreatorRewards = EditorGUILayout.Foldout(showCreatorRewards,
+                    new GUIContent("Rewards", "Rewards you receive upon completing the quest"),
+                    true, new GUIStyle(EditorStyles.foldout) { fixedWidth = 100 });
+
+                GUILayout.Space(100);
+
+                if (GUILayout.Button("Add New Reward (+)"))
+                {
+                }
+            });
+
+            if (showCreatorRewards) CreatorRewardPanel();
+
+            GUILayout.Space(3);
+
+            targetObject.SetImage((Texture2D)EditorGUILayout.ObjectField
+            (
+                new GUIContent("Image", "Quest Image Displaying Objective Location"),
+                targetObject.Image,
+                typeof(Texture2D),
+                false
+            ));
+
+
         }
 
         private void EditorFooter()
         {
+            if (targetObject == null) return;
 
         }
     }
