@@ -1,6 +1,10 @@
 
+
 namespace ZaiR37.Quest
 {
+    using System;
+    
+    [Serializable]
     public class QuestObjective
     {
         public QuestObjectiveType type;

@@ -6,15 +6,15 @@ namespace ZaiR37.Quest
     [CreateAssetMenu(fileName = "New Quest", menuName = "Battle/Quest")]
     public class QuestData : ScriptableObject
     {
-        private string title;                    // The Quest's Name.
-        private QuestType type;                  // Quest Type - Main, Side, or Commission.
-        private string from;                     // Quest Provider's Name.
-        private string location;                 // Location of the Quest Objective.
-        private string description;              // Quest Description.
-        private bool orderly;                    // Completing objectives in a specific sequence.
-        private List<QuestObjective> objectives; // List of objective to Complete the Quest.
-        private List<QuestReward> rewards;       // Rewards you receive upon completing the quest.
-        private Texture2D image;                 // Quest Image Displaying Objective Location.
+        [SerializeField] private string title;                    // The Quest's Name.
+        [SerializeField] private QuestType type;                  // Quest Type - Main, Side, or Commission.
+        [SerializeField] private string from;                     // Quest Provider's Name.
+        [SerializeField] private string location;                 // Location of the Quest Objective.
+        [SerializeField] private string description;              // Quest Description.
+        [SerializeField] private bool orderly;                    // Completing objectives in a specific sequence.
+        [SerializeField] private List<QuestObjective> objectives; // List of objective to Complete the Quest.
+        [SerializeField] private List<QuestReward> rewards;       // Rewards you receive upon completing the quest.
+        [SerializeField] private Texture2D image;                 // Quest Image Displaying Objective Location.
 
         public string Title => title;
         public QuestType Type => type;
