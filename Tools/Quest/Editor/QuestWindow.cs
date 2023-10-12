@@ -572,7 +572,7 @@ namespace ZaiR37.Quest.Editor
 
                 GUILayout.Space(100);
 
-                if (GUILayout.Button("Add New Reward (+)"))
+                if (GUILayout.Button($"Add New Reward ({sourceQuest.RewardList.Count})"))
                 {
 
                     showEditorRewards = true;
@@ -713,6 +713,84 @@ namespace ZaiR37.Quest.Editor
         {
             int listLength = sourceQuest.RewardList.Count;
             if (EmptyListPanel(listLength)) return;
+
+            EditorKit.VerticalLayoutBox(Color.black, () =>
+            {
+                List<int> indicesToRemove = new List<int>();
+
+                for (int i = 0; i < listLength; i++)
+                {
+                    EditorKit.HorizontalLayout(() =>
+                    {
+                        int currentLoop = i + 1;
+                        string numbering = (currentLoop < 10) ? $" {currentLoop}" : $"{currentLoop}";
+                        EditorGUILayout.LabelField($"{numbering}. Type ", GUILayout.MaxWidth(119));
+
+                        QuestRewardType currentRewardType = sourceQuest.RewardList[i].Type;
+                        sourceQuest.RewardList[i].Type = (QuestRewardType)EditorGUILayout.EnumPopup(currentRewardType);
+
+                        if (currentRewardType != sourceQuest.RewardList[i].Type)
+                        {
+                            sourceQuest.RewardList[i].ItemName = "";
+                            sourceQuest.RewardList[i].ItemQuantity = 0;
+                        }
+
+                        if (GUILayout.Button("-", GUILayout.Width(50)))
+                        {
+                            indicesToRemove.Add(i);
+                        }
+                    });
+
+                    EditorKit.Indent(1, () =>
+                    {
+                        EditorRewardType(i);
+                    });
+                }
+
+
+                foreach (int index in indicesToRemove)
+                {
+                    sourceQuest.RewardList.RemoveAt(index);
+                }
+            });
+        }
+
+        private void EditorRewardType(int i)
+        {
+            QuestReward reward = sourceQuest.RewardList[i]; ;
+
+            switch (reward.Type)
+            {
+                case QuestRewardType.Item:
+                    EditorKit.HorizontalLayout(() =>
+                    {
+                        EditorGUILayout.LabelField(new GUIContent("Item", "Reward Item"), GUILayout.Width(148));
+
+                        if (GUILayout.Button(reward.ItemName, EditorStyles.popup))
+                        {
+                            searchProvider.Init(itemList, (x) => { sourceQuest.RewardList[i].ItemName = (string)x; });
+                            SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
+                        }
+                    });
+
+                    sourceQuest.RewardList[i].ItemQuantity = EditorGUILayout.IntField("Quantity", reward.ItemQuantity);
+                    break;
+
+                case QuestRewardType.Reputation:
+                    EditorKit.HorizontalLayout(() =>
+                    {
+                        EditorGUILayout.LabelField(new GUIContent("Location", "Place where reputation increase."), GUILayout.Width(148));
+
+                        if (GUILayout.Button(reward.ReputationPlace, EditorStyles.popup))
+                        {
+                            searchProvider.Init(reputationPlaceList, (x) => { sourceQuest.RewardList[i].ReputationPlace = (string)x; });
+                            SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
+                        }
+                    });
+
+                    sourceQuest.RewardList[i].ReputationProgress = EditorGUILayout.IntField("Progress", reward.ReputationProgress);
+                    break;
+            }
         }
 
         private void EditorFooter()
