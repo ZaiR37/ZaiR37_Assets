@@ -49,6 +49,7 @@ namespace ZaiR37.Quest.Editor
 
         public string[] itemList = new string[]
         {
+            "Gold",
             "Flower/Lily",
             "Flower/Sunflower",
             "Flower/Daisy",
@@ -61,7 +62,12 @@ namespace ZaiR37.Quest.Editor
             "Mineral/Stutonite",
         };
 
-
+        public string[] reputationPlaceList = new string[]
+        {
+            "Chillshore Town",
+            "Silkband Town",
+            "Magedrift"
+        };
 
         Vector2 mainScrollPos;
 
@@ -83,9 +89,10 @@ namespace ZaiR37.Quest.Editor
 
         private void OnEnable()
         {
-            searchProvider = ScriptableObject.CreateInstance<StringListSearchProvider>();
+            searchProvider = CreateInstance<StringListSearchProvider>();
 
             InstantiateCreatorQuestData();
+            sourceQuest = null;
         }
 
         private void OnGUI()
@@ -193,8 +200,8 @@ namespace ZaiR37.Quest.Editor
                 if (GUILayout.Button($"Add New Objective ({creatorQuest.ObjectiveList.Count})"))
                 {
                     QuestObjective newObjective = new QuestObjective();
-
                     creatorQuest.ObjectiveList.Add(newObjective);
+
                     showCreatorObjectives = true;
                 }
 
@@ -215,12 +222,19 @@ namespace ZaiR37.Quest.Editor
 
                 GUILayout.Space(100);
 
-                if (GUILayout.Button("Add New Reward (+)"))
+                if (GUILayout.Button($"Add New Reward ({creatorQuest.RewardList.Count})"))
                 {
+                    QuestReward newReward = new QuestReward();
+                    creatorQuest.RewardList.Add(newReward);
+
+                    showCreatorRewards = true;
                 }
             });
 
-            if (showCreatorRewards) CreatorRewardPanel();
+            EditorKit.Indent(1, () =>
+            {
+                if (showCreatorRewards) CreatorRewardPanel();
+            });
 
             GUILayout.Space(3);
 
@@ -253,13 +267,13 @@ namespace ZaiR37.Quest.Editor
                             string numbering = (currentLoop < 10) ? $" {currentLoop}" : $"{currentLoop}";
                             EditorGUILayout.LabelField($"{numbering}. Type ", GUILayout.MaxWidth(119));
 
-                            QuestObjectiveType currentObjectiveType = creatorQuest.ObjectiveList[i].type;
-                            creatorQuest.ObjectiveList[i].type = (QuestObjectiveType)EditorGUILayout.EnumPopup(currentObjectiveType);
+                            QuestObjectiveType currentObjectiveType = creatorQuest.ObjectiveList[i].Type;
+                            creatorQuest.ObjectiveList[i].Type = (QuestObjectiveType)EditorGUILayout.EnumPopup(currentObjectiveType);
 
-                            if (currentObjectiveType != creatorQuest.ObjectiveList[i].type)
+                            if (currentObjectiveType != creatorQuest.ObjectiveList[i].Type)
                             {
-                                creatorQuest.ObjectiveList[i].target = "";
-                                creatorQuest.ObjectiveList[i].quantity = 0;
+                                creatorQuest.ObjectiveList[i].Target = "";
+                                creatorQuest.ObjectiveList[i].Quantity = 0;
                             }
 
                             if (GUILayout.Button("-", GUILayout.Width(50)))
@@ -287,7 +301,7 @@ namespace ZaiR37.Quest.Editor
         {
             QuestObjective objective = creatorQuest.ObjectiveList[i];
 
-            switch (objective.type)
+            switch (objective.Type)
             {
                 case QuestObjectiveType.Talk:
                 case QuestObjectiveType.Guard:
@@ -295,9 +309,9 @@ namespace ZaiR37.Quest.Editor
                         {
                             EditorGUILayout.LabelField(new GUIContent("NPC Name", "Target Objective"), GUILayout.Width(148));
 
-                            if (GUILayout.Button(objective.target, EditorStyles.popup))
+                            if (GUILayout.Button(objective.Target, EditorStyles.popup))
                             {
-                                searchProvider.Init(npcList, (x) => { creatorQuest.ObjectiveList[i].target = (string)x; });
+                                searchProvider.Init(npcList, (x) => { creatorQuest.ObjectiveList[i].Target = (string)x; });
                                 SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
                             }
                         });
@@ -308,9 +322,9 @@ namespace ZaiR37.Quest.Editor
                     {
                         EditorGUILayout.LabelField(new GUIContent("Location", "Target Objective"), GUILayout.Width(148));
 
-                        if (GUILayout.Button(objective.target, EditorStyles.popup))
+                        if (GUILayout.Button(objective.Target, EditorStyles.popup))
                         {
-                            searchProvider.Init(locationList, (x) => { creatorQuest.ObjectiveList[i].target = (string)x; });
+                            searchProvider.Init(locationList, (x) => { creatorQuest.ObjectiveList[i].Target = (string)x; });
                             SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
                         }
                     });
@@ -321,14 +335,14 @@ namespace ZaiR37.Quest.Editor
                         {
                             EditorGUILayout.LabelField(new GUIContent("NPC Name", "Target Objective"), GUILayout.Width(148));
 
-                            if (GUILayout.Button(objective.target, EditorStyles.popup))
+                            if (GUILayout.Button(objective.Target, EditorStyles.popup))
                             {
-                                searchProvider.Init(npcList, (x) => { creatorQuest.ObjectiveList[i].target = (string)x; });
+                                searchProvider.Init(npcList, (x) => { creatorQuest.ObjectiveList[i].Target = (string)x; });
                                 SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
                             }
                         });
 
-                    creatorQuest.ObjectiveList[i].quantity = EditorGUILayout.IntField("Quantity", objective.quantity);
+                    creatorQuest.ObjectiveList[i].Quantity = EditorGUILayout.IntField("Quantity", objective.Quantity);
                     break;
                 case QuestObjectiveType.Collect:
                 case QuestObjectiveType.Craft:
@@ -336,14 +350,14 @@ namespace ZaiR37.Quest.Editor
                     {
                         EditorGUILayout.LabelField(new GUIContent("Item", "Target Objective"), GUILayout.Width(148));
 
-                        if (GUILayout.Button(objective.target, EditorStyles.popup))
+                        if (GUILayout.Button(objective.Target, EditorStyles.popup))
                         {
-                            searchProvider.Init(itemList, (x) => { creatorQuest.ObjectiveList[i].target = (string)x; });
+                            searchProvider.Init(itemList, (x) => { creatorQuest.ObjectiveList[i].Target = (string)x; });
                             SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
                         }
                     });
 
-                    creatorQuest.ObjectiveList[i].quantity = EditorGUILayout.IntField("Quantity", objective.quantity);
+                    creatorQuest.ObjectiveList[i].Quantity = EditorGUILayout.IntField("Quantity", objective.Quantity);
                     break;
             }
         }
@@ -352,6 +366,88 @@ namespace ZaiR37.Quest.Editor
         {
             int listLength = creatorQuest.RewardList.Count;
             if (EmptyListPanel(listLength)) return;
+
+            EditorKit.VerticalLayoutBox(Color.black, () =>
+            {
+                List<int> indicesToRemove = new List<int>();
+
+                for (int i = 0; i < listLength; i++)
+                {
+                    EditorKit.VerticalLayoutBox(Color.red, () =>
+                    {
+                        EditorKit.HorizontalLayout(() =>
+                        {
+                            int currentLoop = i + 1;
+                            string numbering = (currentLoop < 10) ? $" {currentLoop}" : $"{currentLoop}";
+                            EditorGUILayout.LabelField($"{numbering}. Type ", GUILayout.MaxWidth(119));
+
+                            QuestRewardType currentRewardType = creatorQuest.RewardList[i].Type;
+                            creatorQuest.RewardList[i].Type = (QuestRewardType)EditorGUILayout.EnumPopup(currentRewardType);
+
+                            if (currentRewardType != creatorQuest.RewardList[i].Type)
+                            {
+                                creatorQuest.RewardList[i].ItemName = "";
+                                creatorQuest.RewardList[i].ItemQuantity = 0;
+                            }
+
+                            if (GUILayout.Button("-", GUILayout.Width(50)))
+                            {
+                                indicesToRemove.Add(i);
+                            }
+                        });
+
+
+                        EditorKit.Indent(1, () =>
+                        {
+                            CreatorRewardType(i);
+                        });
+                    });
+                }
+
+                foreach (int index in indicesToRemove)
+                {
+                    creatorQuest.RewardList.RemoveAt(index);
+                }
+
+            });
+        }
+
+        private void CreatorRewardType(int i)
+        {
+            QuestReward reward = creatorQuest.RewardList[i]; ;
+
+            switch (reward.Type)
+            {
+                case QuestRewardType.Item:
+                    EditorKit.HorizontalLayout(() =>
+                    {
+                        EditorGUILayout.LabelField(new GUIContent("Item", "Reward Item"), GUILayout.Width(148));
+
+                        if (GUILayout.Button(reward.ItemName, EditorStyles.popup))
+                        {
+                            searchProvider.Init(itemList, (x) => { creatorQuest.RewardList[i].ItemName = (string)x; });
+                            SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
+                        }
+                    });
+
+                    creatorQuest.RewardList[i].ItemQuantity = EditorGUILayout.IntField("Quantity", reward.ItemQuantity);
+                    break;
+
+                case QuestRewardType.Reputation:
+                    EditorKit.HorizontalLayout(() =>
+                    {
+                        EditorGUILayout.LabelField(new GUIContent("Location", "Place where reputation increase."), GUILayout.Width(148));
+
+                        if (GUILayout.Button(reward.ReputationPlace, EditorStyles.popup))
+                        {
+                            searchProvider.Init(reputationPlaceList, (x) => { creatorQuest.RewardList[i].ReputationPlace = (string)x; });
+                            SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
+                        }
+                    });
+
+                    creatorQuest.RewardList[i].ReputationProgress = EditorGUILayout.IntField("Progress", reward.ReputationProgress);
+                    break;
+            }
         }
 
         private bool EmptyListPanel(int listLength)
@@ -473,7 +569,10 @@ namespace ZaiR37.Quest.Editor
                 }
             });
 
-            if (showCreatorRewards) CreatorRewardPanel();
+            EditorKit.Indent(1, () =>
+            {
+                if (showCreatorRewards) CreatorRewardPanel();
+            });
 
             GUILayout.Space(3);
 
@@ -523,7 +622,7 @@ namespace ZaiR37.Quest.Editor
             if (File.Exists(filePath))
             {
                 Debug.LogError($"Asset with name '{filename}' already exists.");
-                return; 
+                return;
             }
 
 

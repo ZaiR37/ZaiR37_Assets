@@ -7,8 +7,8 @@ namespace ZaiR37.Quest
     [Serializable]
     public class QuestObjective
     {
-        public QuestObjectiveType type;
-        public string target;
-        public int quantity;
+        public QuestObjectiveType Type;
+        public string Target;
+        public int Quantity;
     }
 }

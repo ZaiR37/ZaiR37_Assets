@@ -84,10 +84,10 @@ namespace ZaiR37.Quest
 
                     if (quest.progressList[i].isComplete) continue;
 
-                    if (objective.type != QuestObjectiveType.Talk) continue;
-                    Debug.Log("Quest Target : " + objective.target);
+                    if (objective.Type != QuestObjectiveType.Talk) continue;
+                    Debug.Log("Quest Target : " + objective.Target);
 
-                    if (objective.target != npcName) continue;
+                    if (objective.Target != npcName) continue;
 
                     Debug.Log(quest.data.Title + " : is Complete!");
                     quest.progressList[i].isComplete = true;
