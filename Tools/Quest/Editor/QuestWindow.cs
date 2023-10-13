@@ -3,7 +3,6 @@ namespace ZaiR37.Quest.Editor
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using Codice.CM.Common;
     using UnityEditor;
     using UnityEditor.Experimental.GraphView;
     using UnityEngine;

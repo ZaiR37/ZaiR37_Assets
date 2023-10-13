@@ -9,77 +9,24 @@ namespace ZaiR37.Quest.Editor
     [CustomEditor(typeof(QuestManager))]
     public class QuestManagerEditor : Editor
     {
-        public string[] locationList = new string[]
-{
-            "Chillshore Town/Northhollow Gate",
-            "Chillshore Town/Lastcairn Cave",
-            "Chillshore Town/Clayrock Tavern",
-            "Chillshore Town/Littlehollow Castle",
-            "Silkband Town/Sandshade Gate",
-            "Silkband Town/Oxpond Cave",
-            "Silkband Town/Mythvault Tavern",
-            "Silkband Town/Steelwick Castle",
-            "Magedrift Town/Timbervault Gate",
-            "Magedrift Town/Stillwatch Cave",
-            "Magedrift Town/Lostkeep Tavern",
-            "Magedrift Town/Dustgulf Castle"
-};
-
-        public string[] npcList = new string[]
-        {
-            "Chillshore Town/Russell Lopez",
-            "Chillshore Town/Ralph Dorsey",
-            "Chillshore Town/Henryet Thévenet",
-            "Chillshore Town/Josset Desmarais",
-            "Silkband Town/Gabriel Maier",
-            "Silkband Town/Valentin Baumgartner",
-            "Silkband Town/Bartolo Albani",
-            "Silkband Town/Bonaguida Spizega",
-            "Magedrift Town/Arnao De Paredes",
-            "Magedrift Town/Adelhard Lasch",
-            "Magedrift Town/Rocco Wilhelm",
-            "Magedrift Town/Vopiscus Lupercus"
-        };
-
-        public string[] itemList = new string[]
-        {
-            "Gold",
-            "Flower/Lily",
-            "Flower/Sunflower",
-            "Flower/Daisy",
-            "Flower/Dandelion",
-            "Flower/Marigold",
-            "Mineral/Green Gatandrite",
-            "Mineral/Danbanite",
-            "Mineral/Blue-Green Uraium",
-            "Mineral/Seliphorite",
-            "Mineral/Stutonite",
-        };
-
-        public string[] reputationPlaceList = new string[]
-        {
-            "Chillshore Town",
-            "Silkband Town",
-            "Magedrift"
-        };
-
         StringListSearchProvider searchProvider;
-        string questDataDirectory = "Assets/Data/Quest";
 
-        string questTitleSearch;
         QuestData questDataSearch;
-
         Quest quest;
 
-        bool showQuestLibrary;
-        bool showQuestNotFound;
+        string questDataDirectory = "Assets/Data/Quest";
+        string questTitleSearch;
+        string[] questArray;
 
         private bool showQuestObjectives;
         private bool showQuestRewards;
+        bool showQuestNotFound;
 
         private void OnEnable()
         {
             searchProvider = CreateInstance<StringListSearchProvider>();
+
+            RefreshQuestLibrary();
         }
 
         public override void OnInspectorGUI()
@@ -88,7 +35,14 @@ namespace ZaiR37.Quest.Editor
 
             EditorKit.HorizontalLayout(() =>
             {
-                questTitleSearch = EditorGUILayout.TextField("Search Quest", questTitleSearch);
+                GUILayout.Label(new GUIContent("Search Quest"), GUILayout.Width(Screen.width / 2.8f));
+
+                if (GUILayout.Button(questTitleSearch, EditorStyles.popup))
+                {
+                    searchProvider.Init(questArray, (x) => { questTitleSearch = (string)x; });
+                    SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
+                }
+
                 if (GUILayout.Button("Find", GUILayout.Width(60)))
                 {
                     FindQuestTitle(questManager);
@@ -108,27 +62,8 @@ namespace ZaiR37.Quest.Editor
             var textStyle = new GUIStyle(EditorStyles.boldLabel);
             textStyle.normal.textColor = new Color(0.89f, 0.353f, 0.353f);
             if (showQuestNotFound) EditorKit.CenterLabelField("Quest Not Found.", textStyle);
-            if (quest != null) QuestInfo(questManager);
+            if (quest != null) QuestInfo(quest.data);
             GUILayout.Space(3);
-
-
-            GUILayout.Space(3);
-            EditorKit.HorizontalLine(new Color(0.3f, 0.3f, 0.3f));
-            GUILayout.Space(3);
-
-            EditorGUILayout.TextField("Directory", questDataDirectory);
-
-            if (GUILayout.Button(new GUIContent("Refresh Quest Library", "Get all quest from the folder to the library"), GUILayout.Height(30)))
-            {
-                RefreshQuestLibrary(questManager);
-            }
-
-            GUILayout.Space(3);
-            EditorKit.HorizontalLine(new Color(0.3f, 0.3f, 0.3f));
-            GUILayout.Space(3);
-
-            showQuestLibrary = EditorGUILayout.Foldout(showQuestLibrary, new GUIContent("Quest Library", "Library for all quest"), true);
-            if (showQuestLibrary) QuestLibrary(questManager);
         }
 
         private void FindQuestData(QuestManager questManager)
@@ -147,7 +82,7 @@ namespace ZaiR37.Quest.Editor
                 return;
             }
 
-            QuestInfo(questManager);
+            QuestInfo(quest.data);
             questTitleSearch = quest.data.Title;
             showQuestNotFound = false;
         }
@@ -167,17 +102,12 @@ namespace ZaiR37.Quest.Editor
                 return;
             }
 
-            QuestInfo(questManager);
+            QuestInfo(quest.data);
             questDataSearch = quest.data;
             showQuestNotFound = false;
         }
 
-        private void QuestInfo(QuestManager questManager)
-        {
-            CreatorBody(quest.data);
-        }
-
-        private void CreatorBody(QuestData quest)
+        private void QuestInfo(QuestData quest)
         {
             if (quest == null) return;
 
@@ -224,7 +154,6 @@ namespace ZaiR37.Quest.Editor
                 GUILayout.Label(quest.Orderly.ToString());
             });
 
-
             showQuestObjectives = EditorGUILayout.Foldout(showQuestObjectives,
                 new GUIContent("Objectives", "Objective List to Complete the Quest"),
                 true, new GUIStyle(EditorStyles.foldout) { fixedWidth = 100 });
@@ -254,7 +183,6 @@ namespace ZaiR37.Quest.Editor
                 typeof(Texture2D),
                 false
             );
-
         }
 
         private void ObjectivePanel(QuestData quest)
@@ -427,27 +355,9 @@ namespace ZaiR37.Quest.Editor
             }
         }
 
-        private void QuestLibrary(QuestManager questManager)
+        private void RefreshQuestLibrary()
         {
-            List<QuestData> questLibrary = questManager.GetQuestLibrary();
-            EditorKit.VerticalLayoutBox(Color.black, () =>
-            {
-                for (int i = 0; i < questLibrary.Count; i++)
-                {
-                    QuestData questData = questLibrary[i];
-
-                    EditorKit.VerticalLayoutBox(Color.red, () =>
-                    {
-                        GUILayout.Label(i + 1 + ". " + questData.Title);
-                    });
-                };
-            });
-
-
-        }
-
-        private void RefreshQuestLibrary(QuestManager questManager)
-        {
+            QuestManager questManager = (QuestManager)target;
             List<QuestData> questLibrary = new List<QuestData>();
 
             QuestData[] questDataAssets = AssetDatabase.FindAssets("t:QuestData", new[] { questDataDirectory })
@@ -457,6 +367,17 @@ namespace ZaiR37.Quest.Editor
 
             questLibrary.AddRange(questDataAssets);
             questManager.SetQuestLibrary(questLibrary);
+
+            List<string> questList = new List<string>();
+            foreach (QuestData questData in questDataAssets)
+            {
+                string quesType = questData.Type.ToString();
+                string questTitle = questData.Title;
+                string quest = quesType + "/" + questTitle;
+                questList.Add(quest);
+            }
+            questArray = questList.ToArray();
+
             Debug.Log("Quest List Refreshed!");
         }
     }
