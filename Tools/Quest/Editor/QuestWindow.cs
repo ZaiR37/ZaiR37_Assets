@@ -463,7 +463,7 @@ namespace ZaiR37.Quest.Editor
                     });
                     break;
 
-                case QuestObjectiveType.Kill:
+                case QuestObjectiveType.Defeat:
                     EditorKit.HorizontalLayout(() =>
                         {
                             EditorGUILayout.LabelField(new GUIContent("NPC Name", "Target Objective"), GUILayout.Width(148));

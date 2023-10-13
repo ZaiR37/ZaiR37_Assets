@@ -4,7 +4,7 @@ namespace ZaiR37.Quest
     {
         Talk,
         Visit,
-        Kill,
+        Defeat,
         Guard,
         Collect,
         Craft,
