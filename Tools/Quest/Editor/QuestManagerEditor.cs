@@ -2,8 +2,6 @@ namespace ZaiR37.Quest.Editor
 {
     using UnityEngine;
     using UnityEditor;
-    using System.Collections.Generic;
-    using System.Linq;
     using UnityEditor.Experimental.GraphView;
 
     [CustomEditor(typeof(QuestManager))]
@@ -14,19 +12,16 @@ namespace ZaiR37.Quest.Editor
         QuestData questDataSearch;
         Quest quest;
 
-        string questDataDirectory = "Assets/Data/Quest";
         string questTitleSearch;
-        string[] questArray;
 
         private bool showQuestObjectives;
         private bool showQuestRewards;
         bool showQuestNotFound;
+        private string[] questArray;
 
         private void OnEnable()
         {
             searchProvider = CreateInstance<StringListSearchProvider>();
-
-            RefreshQuestLibrary();
         }
 
         public override void OnInspectorGUI()
@@ -39,13 +34,14 @@ namespace ZaiR37.Quest.Editor
 
                 if (GUILayout.Button(questTitleSearch, EditorStyles.popup))
                 {
-                    searchProvider.Init(questArray, (x) => { questTitleSearch = (string)x; });
+                    searchProvider.Init(questManager.GetQuestArray(), (x) => { questTitleSearch = (string)x; });
                     SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
                 }
 
                 if (GUILayout.Button("Find", GUILayout.Width(60)))
                 {
-                    FindQuestTitle(questManager);
+                    if(questManager.IsGameStarted()) FindQuestTitle(questManager);
+                    Debug.Log("Game hasn't been started!");
                 };
             });
 
@@ -54,7 +50,8 @@ namespace ZaiR37.Quest.Editor
                 questDataSearch = (QuestData)EditorGUILayout.ObjectField(" ", questDataSearch, typeof(QuestData), false);
                 if (GUILayout.Button("Find", GUILayout.Width(60)))
                 {
-                    FindQuestData(questManager);
+                    if(questManager.IsGameStarted()) FindQuestData(questManager);
+                    Debug.Log("Game hasn't been started!");
                 };
             });
 
@@ -74,7 +71,7 @@ namespace ZaiR37.Quest.Editor
                 return;
             }
 
-            quest = questManager.FindThisQuest(questDataSearch);
+            quest = questManager.FindQuest(questDataSearch);
 
             if (quest == null)
             {
@@ -95,7 +92,7 @@ namespace ZaiR37.Quest.Editor
                 return;
             }
 
-            quest = questManager.FindThisQuest(questTitleSearch);
+            quest = questManager.FindQuest(questTitleSearch);
             if (quest == null)
             {
                 showQuestNotFound = true;
@@ -353,32 +350,6 @@ namespace ZaiR37.Quest.Editor
                     });
                     break;
             }
-        }
-
-        private void RefreshQuestLibrary()
-        {
-            QuestManager questManager = (QuestManager)target;
-            List<QuestData> questLibrary = new List<QuestData>();
-
-            QuestData[] questDataAssets = AssetDatabase.FindAssets("t:QuestData", new[] { questDataDirectory })
-                .Select(AssetDatabase.GUIDToAssetPath)
-                .Select(AssetDatabase.LoadAssetAtPath<QuestData>)
-                .ToArray();
-
-            questLibrary.AddRange(questDataAssets);
-            questManager.SetQuestLibrary(questLibrary);
-
-            List<string> questList = new List<string>();
-            foreach (QuestData questData in questDataAssets)
-            {
-                string quesType = questData.Type.ToString();
-                string questTitle = questData.Title;
-                string quest = quesType + "/" + questTitle;
-                questList.Add(quest);
-            }
-            questArray = questList.ToArray();
-
-            Debug.Log("Quest List Refreshed!");
         }
     }
 }
