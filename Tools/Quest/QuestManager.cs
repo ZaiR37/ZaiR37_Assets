@@ -16,8 +16,9 @@ namespace ZaiR37.Quest
         string[] questArray;
 
         bool gameStarted = false;
-        
-        private void OnEnable() {
+
+        private void OnEnable()
+        {
             RefreshQuestLibrary();
         }
 
@@ -124,6 +125,44 @@ namespace ZaiR37.Quest
         {
             Quest quest = FindQuest(questTitle);
             RemoveCurrentQuest(quest);
+        }
+
+        public QuestObjective GetCurrentObjective(Quest quest)
+        {
+            if (quest == null)
+            {
+                Debug.Log("Can't find quest");
+                return null;
+            }
+
+            int currentObjectiveIndex = -1;
+
+            for (int i = 0; i < quest.progressList.Length; i++)
+            {
+                if (quest.progressList[i].isComplete) continue;
+                currentObjectiveIndex = i;
+                break;
+            }
+
+            if (currentObjectiveIndex < 0)
+            {
+                Debug.LogError("Can't find current objective!");
+                return null;
+            }
+
+            return quest.data.ObjectiveList[currentObjectiveIndex];
+        }
+
+        public QuestObjective GetCurrentObjective(QuestData questData)
+        {
+            Quest quest = FindQuest(questData);
+            return GetCurrentObjective(quest);
+        }
+
+        public QuestObjective GetCurrentObjective(string questTitle)
+        {
+            Quest quest = FindQuest(questTitle);
+            return GetCurrentObjective(quest);
         }
 
         public void CompleteObjectiveQuest(Quest quest, int objectiveIndex)
@@ -296,7 +335,7 @@ namespace ZaiR37.Quest
         }
 
         public string[] GetQuestArray() => questArray;
-        public bool IsGameStarted()=> gameStarted;
+        public bool IsGameStarted() => gameStarted;
 
         public List<QuestData> GetQuestLibrary() => questLibrary;
         public void SetQuestLibrary(List<QuestData> newQuestLibrary) => questLibrary = newQuestLibrary;

@@ -22,11 +22,23 @@ namespace ZaiR37.Quest.Editor
         private void OnEnable()
         {
             searchProvider = CreateInstance<StringListSearchProvider>();
+
+            QuestManager questManager = (QuestManager)target;
+
+            questManager.RefreshQuestLibrary();
+            questArray = questManager.GetQuestArray();
         }
 
         public override void OnInspectorGUI()
         {
             QuestManager questManager = (QuestManager)target;
+
+            if (GUILayout.Button("Refresh List"))
+            {
+                questManager.RefreshQuestLibrary();
+                questArray = questManager.GetQuestArray();
+                return;
+            };
 
             EditorKit.HorizontalLayout(() =>
             {
@@ -34,13 +46,13 @@ namespace ZaiR37.Quest.Editor
 
                 if (GUILayout.Button(questTitleSearch, EditorStyles.popup))
                 {
-                    searchProvider.Init(questManager.GetQuestArray(), (x) => { questTitleSearch = (string)x; });
+                    searchProvider.Init(questArray, (x) => { questTitleSearch = (string)x; });
                     SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
                 }
 
                 if (GUILayout.Button("Find", GUILayout.Width(60)))
                 {
-                    if(questManager.IsGameStarted()) FindQuestTitle(questManager);
+                    if (questManager.IsGameStarted()) FindQuestTitle(questManager);
                     Debug.Log("Game hasn't been started!");
                 };
             });
@@ -50,7 +62,7 @@ namespace ZaiR37.Quest.Editor
                 questDataSearch = (QuestData)EditorGUILayout.ObjectField(" ", questDataSearch, typeof(QuestData), false);
                 if (GUILayout.Button("Find", GUILayout.Width(60)))
                 {
-                    if(questManager.IsGameStarted()) FindQuestData(questManager);
+                    if (questManager.IsGameStarted()) FindQuestData(questManager);
                     Debug.Log("Game hasn't been started!");
                 };
             });

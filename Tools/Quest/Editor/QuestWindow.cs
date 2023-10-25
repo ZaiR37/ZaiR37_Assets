@@ -7,13 +7,8 @@ namespace ZaiR37.Quest.Editor
     using UnityEditor.Experimental.GraphView;
     using UnityEngine;
 
-    public class QuestWindow : EditorWindow
+    public class QuestWindow : Editor
     {
-        enum WindowType
-        {
-            Creator,
-            Editor
-        }
 
         public string[] locationList = new string[]
         {
@@ -74,62 +69,26 @@ namespace ZaiR37.Quest.Editor
         bool showCreatorObjectives;
         bool showCreatorRewards;
 
-        bool showEditorObjectives;
-        bool showEditorRewards;
-
-        Color lineColor = new Color(0.3f, 0.3f, 0.3f);
-        WindowType currentWindowType = WindowType.Creator;
-
         StringListSearchProvider searchProvider;
-
+        Color lineColor = new Color(0.3f, 0.3f, 0.3f);
         QuestData creatorQuest;
-        QuestData sourceQuest;
-
-        [MenuItem("Window/ZaiR37 Editor/Quest")]
-        public static void ShowWindow()
-        {
-            GetWindow<QuestWindow>("Quest");
-        }
 
         private void OnEnable()
         {
             searchProvider = CreateInstance<StringListSearchProvider>();
-
             InstantiateCreatorQuestData();
-            sourceQuest = null;
         }
 
         private void OnGUI()
         {
-            switch (currentWindowType)
-            {
-                case WindowType.Creator:
-                    EditorStructure(CreatorHeader, CreatorBody, CreatorFooter);
-                    break;
-
-                case WindowType.Editor:
-                    EditorStructure(EditorHeader, EditorBody, EditorFooter);
-                    break;
-            }
+            EditorStructure(CreatorHeader, CreatorBody, CreatorFooter);
         }
 
         private void EditorStructure(Action headerFunction, Action bodyFunction, Action footerFunction)
         {
             EditorKit.HorizontalLayout(() =>
             {
-                if (GUILayout.Button("<", GUILayout.Width(80)))
-                {
-                    if (currentWindowType == WindowType.Creator) currentWindowType = WindowType.Editor;
-                    else currentWindowType--;
-                }
-
                 headerFunction();
-
-                if (GUILayout.Button(">", GUILayout.Width(80)))
-                {
-                    if (currentWindowType == WindowType.Editor) currentWindowType = WindowType.Creator;
-                    else currentWindowType++;
-                }
             });
 
             EditorKit.HorizontalLine(lineColor);
@@ -260,126 +219,6 @@ namespace ZaiR37.Quest.Editor
             });
         }
 
-        private void EditorHeader()
-        {
-            EditorKit.CenterLabelField("Quest Editor", new GUIStyle(EditorStyles.boldLabel) { fontSize = 17 });
-        }
-
-        private void EditorBody()
-        {
-            sourceQuest = (QuestData)EditorGUILayout.ObjectField("Source", sourceQuest, typeof(QuestData), false);
-            GUILayout.Space(5);
-
-            if (sourceQuest == null) return;
-
-            EditorKit.HorizontalLine(lineColor);
-
-            GUILayout.Space(5);
-
-            EditorKit.HorizontalLayout(() =>
-            {
-                EditorGUILayout.LabelField(new GUIContent("Title", "The Quest's Name (CAN'T EDIT)"), GUILayout.Width(148));
-                GUILayout.TextField(sourceQuest.Title);
-            });
-
-            EditorKit.HorizontalLayout(() =>
-            {
-                EditorGUILayout.LabelField(new GUIContent("Type", "Quest Type - Main, Side, or Commission"), GUILayout.Width(148));
-                sourceQuest.SetType((QuestType)EditorGUILayout.EnumPopup(sourceQuest.Type));
-            });
-
-            EditorKit.HorizontalLayout(() =>
-            {
-                EditorGUILayout.LabelField(new GUIContent("From", "Quest Provider's Name"), GUILayout.Width(148));
-
-                if (GUILayout.Button(sourceQuest.From, EditorStyles.popup))
-                {
-                    searchProvider.Init(npcList, (x) => { sourceQuest.SetFrom((string)x); });
-                    SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
-                }
-            });
-
-            EditorKit.HorizontalLayout(() =>
-            {
-                EditorGUILayout.LabelField(new GUIContent("Location", "Location of the Quest Objective"), GUILayout.Width(148));
-
-                if (GUILayout.Button(sourceQuest.Location, EditorStyles.popup))
-                {
-                    searchProvider.Init(locationList, (x) => { sourceQuest.SetLocation((string)x); });
-                    SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
-                }
-            });
-
-            EditorKit.HorizontalLayout(() =>
-            {
-                EditorGUILayout.LabelField(new GUIContent("Description", "Quest Description"), GUILayout.Width(149));
-                sourceQuest.SetDescription(GUILayout.TextArea(sourceQuest.Description));
-            });
-
-            sourceQuest.SetOrderly(EditorGUILayout.Toggle(new GUIContent("Orderly", "Completing objectives in a specific sequence"), sourceQuest.Orderly));
-
-            EditorKit.HorizontalLayout(() =>
-            {
-                showEditorObjectives = EditorGUILayout.Foldout(showEditorObjectives,
-                    new GUIContent("Objectives", "Objective List to Complete the Quest"),
-                    true, new GUIStyle(EditorStyles.foldout) { fixedWidth = 100 });
-
-                GUILayout.Space(100);
-
-                if (GUILayout.Button($"Add New Objective ({sourceQuest.ObjectiveList.Count})"))
-                {
-                    QuestObjective newObjective = new QuestObjective();
-                    sourceQuest.ObjectiveList.Add(newObjective);
-
-                    showEditorObjectives = true;
-                }
-            });
-
-            EditorKit.Indent(1, () =>
-            {
-                if (showEditorObjectives) ObjectivePanel(sourceQuest);
-            });
-
-            GUILayout.Space(3);
-
-            EditorKit.HorizontalLayout(() =>
-            {
-                showEditorRewards = EditorGUILayout.Foldout(showEditorRewards,
-                    new GUIContent("Rewards", "Rewards you receive upon completing the quest"),
-                    true, new GUIStyle(EditorStyles.foldout) { fixedWidth = 100 });
-
-                GUILayout.Space(100);
-
-                if (GUILayout.Button($"Add New Reward ({sourceQuest.RewardList.Count})"))
-                {
-                    QuestReward newObjective = new QuestReward();
-                    sourceQuest.RewardList.Add(newObjective);
-
-                    showEditorRewards = true;
-                }
-            });
-
-            EditorKit.Indent(1, () =>
-            {
-                if (showEditorRewards) RewardPanel(sourceQuest);
-            });
-
-            GUILayout.Space(3);
-
-            sourceQuest.SetImage((Texture2D)EditorGUILayout.ObjectField
-            (
-                new GUIContent("Image", "Quest Image Displaying Objective Location"),
-                sourceQuest.Image,
-                typeof(Texture2D),
-                false
-            ));
-        }
-
-        private void EditorFooter()
-        {
-            if (sourceQuest == null) return;
-        }
-
         private void ObjectivePanel(QuestData quest)
         {
             int listLength = quest.ObjectiveList.Count;
@@ -438,15 +277,22 @@ namespace ZaiR37.Quest.Editor
                 case QuestObjectiveType.Talk:
                 case QuestObjectiveType.Guard:
                     EditorKit.HorizontalLayout(() =>
-                        {
-                            EditorGUILayout.LabelField(new GUIContent("NPC Name", "Target Objective"), GUILayout.Width(148));
+                    {
+                        EditorGUILayout.LabelField(new GUIContent("NPC Name", "Target Objective"), GUILayout.Width(148));
 
-                            if (GUILayout.Button(objective.Target, EditorStyles.popup))
-                            {
-                                searchProvider.Init(npcList, (x) => { quest.ObjectiveList[i].Target = (string)x; });
-                                SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
-                            }
-                        });
+                        if (GUILayout.Button(objective.Target, EditorStyles.popup))
+                        {
+                            searchProvider.Init(npcList, (x) => { quest.ObjectiveList[i].Target = (string)x; });
+                            SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
+                        }
+                    });
+
+                    EditorKit.HorizontalLayout(() =>
+                    {
+                        EditorGUILayout.LabelField(new GUIContent("Description", "Objective Description"), GUILayout.Width(149));
+                        quest.ObjectiveList[i].Description = GUILayout.TextArea(quest.ObjectiveList[i].Description);
+                    });
+
                     break;
 
                 case QuestObjectiveType.Visit:
@@ -460,21 +306,35 @@ namespace ZaiR37.Quest.Editor
                             SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
                         }
                     });
+
+                    EditorKit.HorizontalLayout(() =>
+                    {
+                        EditorGUILayout.LabelField(new GUIContent("Description", "Objective Description"), GUILayout.Width(149));
+                        quest.ObjectiveList[i].Description = GUILayout.TextArea(quest.ObjectiveList[i].Description);
+                    });
+
                     break;
 
                 case QuestObjectiveType.Defeat:
                     EditorKit.HorizontalLayout(() =>
-                        {
-                            EditorGUILayout.LabelField(new GUIContent("NPC Name", "Target Objective"), GUILayout.Width(148));
+                    {
+                        EditorGUILayout.LabelField(new GUIContent("NPC Name", "Target Objective"), GUILayout.Width(148));
 
-                            if (GUILayout.Button(objective.Target, EditorStyles.popup))
-                            {
-                                searchProvider.Init(npcList, (x) => { quest.ObjectiveList[i].Target = (string)x; });
-                                SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
-                            }
-                        });
+                        if (GUILayout.Button(objective.Target, EditorStyles.popup))
+                        {
+                            searchProvider.Init(npcList, (x) => { quest.ObjectiveList[i].Target = (string)x; });
+                            SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), searchProvider);
+                        }
+                    });
 
                     quest.ObjectiveList[i].Quantity = EditorGUILayout.IntField("Quantity", objective.Quantity);
+
+                    EditorKit.HorizontalLayout(() =>
+                    {
+                        EditorGUILayout.LabelField(new GUIContent("Description", "Objective Description"), GUILayout.Width(149));
+                        quest.ObjectiveList[i].Description = GUILayout.TextArea(quest.ObjectiveList[i].Description);
+                    });
+
                     break;
                 case QuestObjectiveType.Collect:
                 case QuestObjectiveType.Craft:
@@ -490,6 +350,13 @@ namespace ZaiR37.Quest.Editor
                     });
 
                     quest.ObjectiveList[i].Quantity = EditorGUILayout.IntField("Quantity", objective.Quantity);
+
+                    EditorKit.HorizontalLayout(() =>
+                    {
+                        EditorGUILayout.LabelField(new GUIContent("Description", "Objective Description"), GUILayout.Width(149));
+                        quest.ObjectiveList[i].Description = GUILayout.TextArea(quest.ObjectiveList[i].Description);
+                    });
+
                     break;
             }
         }
