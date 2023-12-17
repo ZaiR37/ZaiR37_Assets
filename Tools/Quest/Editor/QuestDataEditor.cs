@@ -2,6 +2,7 @@ namespace ZaiR37.Quest.Editor
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using UnityEditor;
     using UnityEditor.Experimental.GraphView;
     using UnityEngine;
@@ -75,6 +76,31 @@ namespace ZaiR37.Quest.Editor
         {
             searchProvider = CreateInstance<StringListSearchProvider>();
             sourceQuest = (QuestData)target;
+        }
+
+        private void OnDisable()
+        {
+            SaveQuestData();
+        }
+
+        private void SaveQuestData()
+        {
+            string directory = "Assets/Data/Quest";
+
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            string filename = $"{sourceQuest.Title}.asset";
+            string filePath = Path.Combine(directory, filename);
+
+            var existingQuest = sourceQuest;
+
+            EditorUtility.SetDirty(existingQuest);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log("New Quest Data created and saved to: " + filePath);
         }
 
         public override void OnInspectorGUI()

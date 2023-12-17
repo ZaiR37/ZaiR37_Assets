@@ -19,7 +19,9 @@ namespace ZaiR37.Quest
 
         private void OnEnable()
         {
+#if UNITY_EDITOR
             RefreshQuestLibrary();
+#endif
         }
 
         private void Awake()
@@ -37,7 +39,9 @@ namespace ZaiR37.Quest
         private void Start()
         {
             questList = new List<Quest>();
+#if UNITY_EDITOR
             RefreshQuestLibrary();
+#endif
             gameStarted = true;
 
             foreach (QuestData questData in questLibrary)
@@ -309,6 +313,8 @@ namespace ZaiR37.Quest
             return null;
         }
 
+
+#if UNITY_EDITOR
         public void RefreshQuestLibrary()
         {
             List<QuestData> questLibrary = new List<QuestData>();
@@ -333,6 +339,8 @@ namespace ZaiR37.Quest
 
             Debug.Log("Quest List Refreshed!");
         }
+#endif
+
 
         public string[] GetQuestArray() => questArray;
         public bool IsGameStarted() => gameStarted;
